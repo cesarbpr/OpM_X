@@ -23,12 +23,12 @@ class robot:
     Izz4=182774*1e-09
     Bm=0.0001
     Bg=0.01
-    #   n=353.5; g=9.81;
+    #   n=353.5; self.g=9.81;
     n=350.5
     g=9.81
     Jm=0.0000071
     Jg=0.0000053
-    #   Jeq=(n**2)*Jm+Jg;Beq=(n**2)*Bm+Bg;
+    #   Jeq=(n**2)*Jm+Jg;self.Beq=(n**2)*Bm+Bg;
     Jeq=0.0037
     Beq=0.0012
 
@@ -39,60 +39,74 @@ class robot:
     KA=1
     Ra=1
     Ka=1
-    T = 0.02
+    U_lin=1/(Km*n)
+    T = 0.01
+
+    # Posción y velocidad inicial OMX
+    q = np.array([[np.deg2rad(0)], [np.deg2rad(0)]], dtype=np.float64)
+    dq = np.array([[0], [0]], dtype=np.float64)
+    q_ac=np.array([0,0], dtype=np.float64)
+    u = np.array([[0], [0]], dtype=np.float64)
 
     def __init__(self):
         pub_topic_q_real="q_real"
         sub_topic_u="u"
 
         self.pub_qreal=rospy.Publisher(pub_topic_q_real,Float64MultiArray,queue_size=10)
-        self.u_suscriber=rospy.Subscriber(sub_topic_u,Float64MultiArray,self.cb_modelo)
+        self.u_suscriber=rospy.Subscriber(sub_topic_u,Float64MultiArray,self.cb_u)
 
-    def cb_qreal_in(self,q_real):
-        self.q=np.transpose(q_real.data)
-
-    def publish_present_u(self):
-
+    def publish_present_q(self):
         pub_array = Float64MultiArray()
-        pub_array.data[0] = self.u[0,0]
-        pub_array.data[1] = self.u[1,0]
-        self.pub_u.publish(pub_array)
+        pub_array.data  = [0,0]
+        pub_array.data[0] = self.q[0,0]
+        pub_array.data[1] = self.q[1,0]
+        self.pub_qreal.publish(pub_array)
     
-    def cb_modelo(self, u):
+    def cb_u(self, u_data):
+        u1=u_data.data[0]
+        u2=u_data.data[1]
+        self.u = np.array([[u1], [u2]])
+
+    def OMX_modelo(self):
+
         # MODELO DINAMICO DEL SISTEMA 
-        M11 = U_lin*(Iyy3 + Iyy4 + Jeq + m4*(L3_y**2 + 2*np.cos(q[1,0])*L3_y*l4_y + l4_y**2) + l3_y**2*m3);
-        M12 = U_lin*(Iyy4 + m4*(l4_y**2 + L3_y*np.cos(q[1,0])*l4_y));
+        M11 = self.U_lin*(self.Iyy3 + self.Iyy4 + self.Jeq + self.m4*(self.L3_y**2 + 2*np.cos(self.q[1,0])*self.L3_y*self.l4_y + self.l4_y**2) + self.l3_y**2*self.m3);
+        M12 = self.U_lin*(self.Iyy4 + self.m4*(self.l4_y**2 + self.L3_y*np.cos(self.q[1,0])*self.l4_y));
         M21 = M12;
-        M22 = U_lin*(m4*l4_y**2 + Iyy4 + Jeq);
-        M   = np.array([[M11, M12],
-                    [M21, M22]]);
+        M22 = self.U_lin*(self.m4*self.l4_y**2 + self.Iyy4 + self.Jeq);
+        M   = np.array([[M11, M12],[M21, M22]]);
         #######
-        P11 = U_lin*(Beq - L3_y*l4_y*m4*dq[1,0]*np.sin(q[1,0]));
-        P12 = U_lin*(-L3_y*l4_y*m4*np.sin(q[1,0])*(dq[0,0] + dq[1,0]));
-        P21 = U_lin*(L3_y*l4_y*m4*dq[0,0]*np.sin(q[1,0]));
-        P22 = U_lin*(Beq);
+        P11 = self.U_lin*(self.Beq - self.L3_y*self.l4_y*self.m4*self.dq[1,0]*np.sin(self.q[1,0]));
+        P12 = self.U_lin*(-self.L3_y*self.l4_y*self.m4*np.sin(self.q[1,0])*(self.dq[0,0] + self.dq[1,0]));
+        P21 = self.U_lin*(self.L3_y*self.l4_y*self.m4*self.dq[0,0]*np.sin(self.q[1,0]));
+        P22 = self.U_lin*(self.Beq);
 
         P   = np.array([[P11, P12],
                 [P21, P22]])
 
         #####
-        D11 = U_lin*(-g*m4*(l4_y*np.cos(q[0,0] + q[1,0]) + L3_y*np.cos(q[0,0])) - g*l3_y*m3*np.cos(q[0,0]));
-        D21 = U_lin*(-g*l4_y*m4*np.cos(q[0,0] + q[1,0]));
+        D11 = self.U_lin*(-self.g*self.m4*(self.l4_y*np.cos(self.q[0,0] + self.q[1,0]) + self.L3_y*np.cos(self.q[0,0])) - self.g*self.l3_y*self.m3*np.cos(self.q[0,0]));
+        D21 = self.U_lin*(-self.g*self.l4_y*self.m4*np.cos(self.q[0,0] + self.q[1,0]));
         d = np.array([[D11], [D21]])
-        dq = dq + T * np.linalg.solve(M, u - np.dot(P, dq) - d)
-        q = q + T * dq
+        self.dq = self.dq + self.T * np.linalg.solve(M, self.u - np.dot(P, self.dq) - d)
+        self.q = self.q + self.T * self.dq
+        self.q_ac=([self.q[0,0],self.q[1,0]])
 
 
 def main():
-    rospy.init_node('adaptative_controller')
-    rospy.Subscriber('q_des',Float64MultiArray,function)
-    pub = rospy.Publisher('q_ref',Float64MultiArray,queue_size=1)
-    freq = 10
+    rospy.init_node('OMX_plant')
+    freq = 100
     rate = rospy.Rate(freq) #10 Hz
-    control=controler()
+    OMX=robot()
 
     while not rospy.is_shutdown():
-        control.publish_present_u()
+        OMX.OMX_modelo()
+        OMX.publish_present_q()
+        q_re=np.round(np.rad2deg(OMX.q_ac),2)
+        #print("q1:",OMX.q[0],"\n")
+        #print("\n ------- \n")
+        #print("q2:",OMX.q[1],"\n")
+        rospy.loginfo(str(q_re))
         rate.sleep()
 
 if __name__ == "__main__":
