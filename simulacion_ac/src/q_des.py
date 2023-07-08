@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # CONDICIONES INICIALES 
     k=0
     A=0.5
-    nn=1000
+    nn=2000
     qd1=np.deg2rad(0)
     qd2=np.deg2rad(0)
     q_des = np.array([qd1,qd2])
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         q_deg=np.round(np.rad2deg(q_des),2)
         rospy.loginfo(str(q_deg))
         pub.publish(var)
-        """
+        
             # Codigo:
         if k >= 0 and k <= nn/4:
             qd1  = 0*A
@@ -42,11 +42,12 @@ if __name__ == "__main__":
         else:
             qd1 = 0*A
             qd2 = 0*A 
-        """
-        qd1  = 0.5*A
-        qd2  = 1*A
+            k = 0
+        
+        #qd1  = 0.5*A
+        #qd2  = 1*A
         q_des = np.array([qd1,qd2])
-        #k = k + 1
+        k = k + 1
         #rospy.loginfo(str(k))
         rate.sleep()
 

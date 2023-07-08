@@ -40,7 +40,7 @@ class robot:
     Ra=1
     Ka=1
     U_lin=1/(Km*n)
-    T = 0.01
+    # T = 0.01
 
     # Posción y velocidad inicial OMX
     q = np.array([[np.deg2rad(0)], [np.deg2rad(0)]], dtype=np.float64)
@@ -48,9 +48,12 @@ class robot:
     q_ac=np.array([0,0], dtype=np.float64)
     u = np.array([[0], [0]], dtype=np.float64)
 
-    def __init__(self):
-        pub_topic_q_real="q_real"
+    def __init__(self,sample_time):
+        pub_topic_q_real="pos_present_value"
         sub_topic_u="u"
+
+        #Timepo de muestreo
+        self.T=1/sample_time
 
         self.pub_qreal=rospy.Publisher(pub_topic_q_real,Float64MultiArray,queue_size=10)
         self.u_suscriber=rospy.Subscriber(sub_topic_u,Float64MultiArray,self.cb_u)
@@ -97,7 +100,7 @@ def main():
     rospy.init_node('OMX_plant')
     freq = 100
     rate = rospy.Rate(freq) #10 Hz
-    OMX=robot()
+    OMX=robot(freq)
 
     while not rospy.is_shutdown():
         OMX.OMX_modelo()
