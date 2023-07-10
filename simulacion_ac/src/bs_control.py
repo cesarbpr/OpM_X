@@ -10,21 +10,29 @@ class controler:
     # ARTICULACIONES, SENALES DE CONTROL Y POSICION
 
     # LAS ENTRADAS SON LOS PARAMETROS DE SINTONIZACION
+    """
     k1=1
     ld=20
     kd=0.5
     kk=3
+    """
+
+    k1=0.8
+    ld=50
+    kd=0.1
+    kk=1.5
     # PARAMETROS DE CONTROL
     I = np.eye(2,2)
     K  = kk*I
     Kd = kd*I
     K1 = k1*I
     Ld = ld*I
-    u_lim=2
+    u_lim=0.450
     # DATOS DEL SUB-SISTEMA MECANICO
     # Masas
     m3=0.135
-    m4=0.236
+    #m4=0.236
+    m4=0.1773
     #Longitudes
     l3_y=0.0933
     L3_y=0.124
@@ -45,9 +53,10 @@ class controler:
     Jm=0.0000071
     Jg=0.0000053
     #   self.Jeq=(n**2)*Jm+Jg;self.Beq=(n**2)*Bm+Bg;
+    #Jeq=0.0037
+    #Beq=0.0012
     Jeq=0.0037
     Beq=0.0012
-
     # DATOS DEL SUB-SISTEMA ELECTRICO
     #   Km=0.0458; Kb=0.0458; KA=8.5; Ra=2.49;Ka=8.5;
     Km=0.005
@@ -91,7 +100,7 @@ class controler:
         self.qd_suscriber=rospy.Subscriber(sub_topic_q_des,Float64MultiArray,self.cb_qdes_in)
         self.qreal_suscriber=rospy.Subscriber(sub_topic_q_real,Float64MultiArray,self.cb_qreal_in)
     
-    """ # Con el robot real
+    # Con el robot real
     def cb_qreal_in(self,q_real):
         q_des1=q_real.data[2]
         q_des2=q_real.data[3]
@@ -104,9 +113,9 @@ class controler:
         pub_array.data[2] = self.u[0,0]
         pub_array.data[3] = self.u[1,0]
         self.pub_u.publish(pub_array)
-    """    
+       
 
-    # Para la simulación
+    """ # Para la simulación
     def cb_qreal_in(self,q_real):
         q1=q_real.data[0]
         q2=q_real.data[1]
@@ -119,11 +128,12 @@ class controler:
         pub_array.data[1] = self.u[1,0]
         self.pub_u.publish(pub_array)
 
+    """
+
     def cb_qdes_in(self,q_des):
         q_des1=q_des.data[0]
         q_des2=q_des.data[1]
         self.qd = np.array([[q_des1], [q_des2]])
-
 
 
     def en_control(self):
@@ -158,21 +168,22 @@ class controler:
         G1e = (self.U_lin)*(- self.g*self.m4*(self.l4_y*np.cos(self.qe[0,0] + self.qe[1,0]) + self.L3_y*np.cos(self.qe[0,0])) - self.g*self.l3_y*self.m3*np.cos(self.qe[0,0]))
         G2e = (self.U_lin)*(-self.g*self.l4_y*self.m4*np.cos(self.qe[0,0] + self.qe[1,0]))
 
-        Ge = [[G1e], [G2e]];
+        Ge = [[G1e], [G2e]]
         
         # LEY DE CONTROL 
         self.u =(Me@self.ddqd + Pe@dqr + Ge - self.Kd@(self.dqe - dqr) - self.K1@z1)
+        #self.u = np.array([[0], [0]])
 
         # Limitador de corriente:
-        if self.u[0,0] >= self.u_lim or self.u[0,0] <= -self.u_lim:
-            self.u[0,0] = self.u_pas[0,0]
-        else:
-            self.u_pas[0,0] = self.u[0,0]
+        if self.u[0,0] >= self.u_lim:
+            self.u[0,0] = self.u_lim
+        elif self.u[0,0] <= -self.u_lim:
+            self.u[0,0] = -self.u_lim
 
-        if self.u[1,0] >= self.u_lim or self.u[1,0] <= -self.u_lim:
-            self.u[1,0] = self.u_pas[1,0]
-        else:
-            self.u_pas[1,0] = self.u[1,0]
+        if self.u[1,0] >= self.u_lim:
+            self.u[1,0] = self.u_lim
+        elif self.u[1,0] <= -self.u_lim:
+            self.u[1,0] = -self.u_lim
         
 
 
@@ -185,10 +196,12 @@ def main():
     while not rospy.is_shutdown():
         control.en_control()
         control.publish_present_u()
+        Q=np.round(np.rad2deg(control.q),4)
         U=np.round(control.u,4)
         #print("U1:",control.u[0],"\n")
         #print("\n ------- \n")
         #print("U2:",control.u[1],"\n")
+        #rospy.loginfo(str(Q))
         rospy.loginfo(str(U))
         rate.sleep()
 

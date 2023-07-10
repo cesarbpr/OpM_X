@@ -12,10 +12,12 @@ y_qdes2 = []
 qdes_vec = [0,0]
 y_qreal1 = []
 y_qreal2 = []
-qreal_vec = [0,0]
+#qreal_vec = [0,0]
+qreal_vec = [0,0,0,0,0]
 y_u1 = []
 y_u2 = []
-u_vec = [0,0]
+u_vec = [0,0,0,0,0]
+#u_vec = [0,0]
 refresh_point = 500    # Punto en el cual se borra la data pasada y se actualiza
 def callback_q_des(q_des):
     global qdes_vec
@@ -35,10 +37,10 @@ def create_point():
     current_time = rospy.Time.now().to_sec()  # Obtener el tiempo actual en segundos
     q_des1=qdes_vec[0]
     q_des2=qdes_vec[1]
-    qreal1=qreal_vec[0]
-    qreal2=qreal_vec[1]
-    u1=u_vec[0]
-    u2=u_vec[1]
+    qreal1=qreal_vec[2]
+    qreal2=qreal_vec[3]
+    u1=u_vec[2]
+    u2=u_vec[3]
     x_tiempo.append(current_time)  # Tiempo actual como eje x
     y_qdes1.append(q_des1)
     y_qdes2.append(q_des2)
@@ -91,7 +93,7 @@ if __name__ == "__main__":
             line1.set_xdata(x_tiempo)  # Actualizar los datos del eje x
             line1.set_ydata(y_qdes1)  # Actualizar los datos del eje y
             line2.set_xdata(x_tiempo)  # Actualizar los datos del eje x
-            line2.set_ydata(y_qreal1)
+            line2.set_ydata(y_qreal1)   
 
             line3.set_xdata(x_tiempo)  # Actualizar los datos del eje x
             line3.set_ydata(y_u1)  # Actualizar los datos del eje y
