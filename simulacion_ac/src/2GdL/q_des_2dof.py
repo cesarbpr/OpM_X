@@ -32,13 +32,13 @@ if __name__ == "__main__":
             qd2 = 0*A
         elif k >= nn/4 and k <= nn/2:
             qd1 = np.deg2rad(-20)
-            qd2 = np.deg2rad(0)
+            qd2 = np.deg2rad(20)
         elif k >= nn/2 and k <= 3*nn/4:
             qd1 = np.deg2rad(-30)
             qd2 = np.deg2rad(0)
         elif k >= 3*nn/4 and k <= nn:
             qd1 = np.deg2rad(-10)
-            qd2 = np.deg2rad(0)
+            qd2 = np.deg2rad(-20)
         else:
             qd1 = np.deg2rad(0)
             qd2 = np.deg2rad(0)

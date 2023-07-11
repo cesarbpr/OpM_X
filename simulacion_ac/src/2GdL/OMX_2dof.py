@@ -8,7 +8,7 @@ class robot:
     # DATOS DEL SUB-SISTEMA MECANICO
     # Masas
     m3=0.135
-    m4=0.236
+    m4=0.1773
     #Longitudes
     l3_y=0.0933
     L3_y=0.124
@@ -98,7 +98,7 @@ class robot:
 
 def main():
     rospy.init_node('OMX_plant')
-    freq = 100
+    freq = 100 
     rate = rospy.Rate(freq) #10 Hz
     OMX=robot(freq)
 

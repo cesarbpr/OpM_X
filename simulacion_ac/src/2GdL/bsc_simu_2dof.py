@@ -11,16 +11,17 @@ class controler:
 
     # LAS ENTRADAS SON LOS PARAMETROS DE SINTONIZACION
     """
-    k1=1
-    ld=20
-    kd=0.5
-    kk=3
-    """
-
+    # Valores que funcionan
     k1=0.8
     ld=50
     kd=0.1
     kk=1.5
+    """
+
+    k1=1.2
+    ld=50
+    kd=0.1
+    kk=1
     # PARAMETROS DE CONTROL
     I = np.eye(2,2)
     K  = kk*I
@@ -90,16 +91,12 @@ class controler:
         pub_topic_u="u"
         sub_topic_q_des="q_des"
         sub_topic_q_real="pos_present_value"        
-        #pub_topic_u="u"
-        #sub_topic_q_des="q_des"
-        #sub_topic_q_real="q_real"
-        #Timepo de muestreo
         self.T=1/sample_time
 
         self.pub_u=rospy.Publisher(pub_topic_u,Float64MultiArray,queue_size=10)
         self.qd_suscriber=rospy.Subscriber(sub_topic_q_des,Float64MultiArray,self.cb_qdes_in)
         self.qreal_suscriber=rospy.Subscriber(sub_topic_q_real,Float64MultiArray,self.cb_qreal_in)
-    
+    """
     # Con el robot real
     def cb_qreal_in(self,q_real):
         q_des1=q_real.data[2]
@@ -113,9 +110,9 @@ class controler:
         pub_array.data[2] = self.u[0,0]
         pub_array.data[3] = self.u[1,0]
         self.pub_u.publish(pub_array)
-       
+    """  
 
-    """ # Para la simulación
+    # Para la simulación
     def cb_qreal_in(self,q_real):
         q1=q_real.data[0]
         q2=q_real.data[1]
@@ -128,7 +125,7 @@ class controler:
         pub_array.data[1] = self.u[1,0]
         self.pub_u.publish(pub_array)
 
-    """
+    
 
     def cb_qdes_in(self,q_des):
         q_des1=q_des.data[0]
@@ -196,7 +193,7 @@ def main():
     while not rospy.is_shutdown():
         control.en_control()
         control.publish_present_u()
-        Q=np.round(np.rad2deg(control.q),4)
+        Q=np.round(np.rad2deg(control.q),3)
         U=np.round(control.u,4)
         #print("U1:",control.u[0],"\n")
         #print("\n ------- \n")

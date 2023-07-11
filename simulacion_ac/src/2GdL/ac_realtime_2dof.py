@@ -7,20 +7,30 @@ from std_msgs.msg import String
 
 class controler:
     # VARIABLES:
-    Lambda=0.8
-    ld = 20
-    Kd = 1
+    '''
+    Lambda=2
+    ld = 30
+    Kd = 0.1  #este desestabiliza
+    Gamma = 0.005
+    #tap=1;s
+    u_lim=0.45
+    s_lim=0.5
+    '''
+    Lambda=4
+    ld = 40
+    Kd = 0.09     #este desestabiliza
     Gamma = 0.008
-    #tap=1;
-    u_lim=0.33625
+    #tap=1;s
+    u_lim=0.45
+    s_lim=0.01
     # PARAMETROS DE CONTROL
     # I = [1 0 0 0;0 1 0 0;0 0 1 0;0 0 0 1];
     I = np.eye(2,2)
     Ld = ld*I
     # DATOS DEL SUB-SISTEMA MECANICO
     # Masas
-    m3=0.135
-    m4=0.236
+    m3=0.200
+    m4=0.235
     #Longitudes
     l3_y=0.0933
     L3_y=0.124
@@ -45,7 +55,7 @@ class controler:
     Beq=0.0012
 
     # DATOS DEL SUB-SISTEMA ELECTRICO
-    #   Km=0.0458; Kb=0.0458; KA=8.5; Ra=2.49;Ka=8.5;
+    #   Km=0.005; Kb=0.0458; KA=8.5; Ra=2.49;Ka=8.5;
     Km=0.005
     Kb=1
     KA=1
@@ -73,7 +83,7 @@ class controler:
     # print("self.dqe:\n")
     # print(self.dqe)
     # print("\n")
-    U_lin=1/(Km*n)
+    U_lin=1#/(Km*n)
     a1=m3*l3_y**2+Iyy3+Iyy4+m4*(L3_y**2+l4_y**2)
     a2=m4*L3_y*l4_y
     a3=Jeq; a4=Beq
@@ -95,10 +105,11 @@ class controler:
         #Timepo de muestreo
         self.T=1/sample_time
 
-        self.pub_u=rospy.Publisher(pub_topic_u,Float64MultiArray,queue_size=10)
+        self.pub_u=rospy.Publisher(pub_topic_u,Float64MultiArray,queue_size=1)
         self.qd_suscriber=rospy.Subscriber(sub_topic_q_des,Float64MultiArray,self.cb_qdes_in)
         self.qreal_suscriber=rospy.Subscriber(sub_topic_q_real,Float64MultiArray,self.cb_qreal_in)
-    """
+    
+    # Para la simplemenación
     def cb_qreal_in(self,q_real):
         q_des1=q_real.data[2]
         q_des2=q_real.data[3]
@@ -126,6 +137,7 @@ class controler:
         pub_array.data[1] = self.u[1,0]
         self.pub_u.publish(pub_array)
 
+    """
 
     def cb_qdes_in(self,q_des):
         q_des1=q_des.data[0]
@@ -143,9 +155,6 @@ class controler:
         # ERROR DE POSICION Y DE VELOCIDAD   
         self.qtilde = self.q - self.qd
         self.dqtilde = self.dqe - self.dqd
-
-        # FUNCION DE DESLIZAMIENTO 
-        self.s = self.dqtilde + self.Lambda*self.qtilde
 
         # VELOCIDAD Y ACELERACION DE REFERENCIA
         self.dqr = self.dqd - self.Lambda*self.qtilde
@@ -172,25 +181,26 @@ class controler:
         # ESTIMACION DE PARAMETROS
         Y_trans = np.transpose(Y) 
  
-        self.ae = self.ae - self.T*self.Gamma*Y_trans@self.s
-        #print(self.u)
-        #print(self.s)
-        #print(self.ae)
-        #print(self.Kd)
-        #print(Y_trans)
+        # FUNCION DE DESLIZAMIENTO 
+        self.s = self.dqtilde + self.Lambda*self.qtilde
+
+        if self.s[0,0]<self.s_lim and self.s[0,0]>-self.s_lim:
+            self.ae = self.ae - self.T*self.Gamma*Y_trans@self.s
+
+
         # LEY DE CONTROL 
         self.u=Y@self.ae-self.Kd*self.s
 
         # Limitador de corriente:
-        if self.u[0,0] >= self.u_lim or self.u[0,0] <= -self.u_lim:
-            self.u[0,0] = self.u_pas[0,0]
-        else:
-            self.u_pas[0,0] = self.u[0,0]
+        if self.u[0,0] >= self.u_lim:
+            self.u[0,0] = self.u_lim
+        elif self.u[0,0] <= -self.u_lim:
+            self.u[0,0] = -self.u_lim
 
-        if self.u[1,0] >= self.u_lim or self.u[1,0] <= -self.u_lim:
-            self.u[1,0] = self.u_pas[1,0]
-        else:
-            self.u_pas[1,0] = self.u[1,0]
+        if self.u[1,0] >= self.u_lim:
+            self.u[1,0] = self.u_lim
+        elif self.u[1,0] <= -self.u_lim:
+            self.u[1,0] = -self.u_lim
         
 
 
