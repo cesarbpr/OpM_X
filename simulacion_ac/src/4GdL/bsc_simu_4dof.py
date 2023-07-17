@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import rospy
 import numpy as np
+import csv
+import os
 from std_msgs.msg import Float64MultiArray
 
 
@@ -10,10 +12,18 @@ class controler:
     # ARTICULACIONES, SENALES DE CONTROL Y POSICION
 
     # LAS ENTRADAS SON LOS PARAMETROS DE SINTONIZACION
-    k1=1.2
-    ld=50
-    kd=0.1
-    kk=1
+    # Funcionan para referencia
+    k1=2
+    ld=40
+    kd=0.35
+    kk=1.5
+    '''
+    # Funciona para seguimiento
+    k1=1
+    ld=30 #Afecta a la respuesta del sistema
+    kd=0.07 #afecta a la estabilidad del sistema. !! Si es muy alto muere
+    kk=1.5
+    ''' 
     # PARAMETROS DE CONTROL
     I = np.eye(4,4)
     K  = kk*I
@@ -21,7 +31,7 @@ class controler:
     K1 = k1*I
     Ld = ld*I
     #tap=1
-    u_lim=10
+    u_lim=0.672
 
     # DATOS DEL SUB-SISTEMA MECANICO
     # Masas
@@ -104,6 +114,7 @@ class controler:
         q4=q_real.data[3]
         self.q = np.array([[q1], [q2], [q3], [q4]])
 
+
     # Publicando la señal de control
     def publish_present_u(self):
         pub_array = Float64MultiArray()
@@ -122,7 +133,14 @@ class controler:
         q_des4=q_des.data[3]
         self.qd = np.array([[q_des1], [q_des2], [q_des3], [q_des4]])
 
-
+    def csv_getData(self):
+        current_dir = "/home/cesar/OpM_X/catkin_ws/src/simulacion_ac/src/4GdL/DataLog"
+        array_q = self.q.tolist()
+        current_time = rospy.Time.now()
+        file_path = os.path.join(current_dir, 'Dato_bsc_simu_4GdL.csv')
+        with open(file_path,'a') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([current_time] + array_q)
     def en_control(self):
         
         # ERROR TRACKING
@@ -208,7 +226,7 @@ class controler:
         Ge = self.U_lin*np.array([[0], [D2e], [D3e], [D4e]])
         
         # LEY DE CONTROL 
-        self.u =(Me@self.ddqd + Pe@dqr + Ge - self.Kd@(self.dqe - dqr) - self.K1@z1)
+        self.u =Me@self.ddqd + Pe@dqr + Ge - self.Kd@(self.dqe - dqr) - self.K1@z1
 
         # Limitador de corriente:
         if self.u[0,0] >= self.u_lim:
@@ -251,6 +269,7 @@ def main():
     while not rospy.is_shutdown():
         control.en_control()
         control.publish_present_u()
+        control.csv_getData()
         # Q=np.round(np.rad2deg(control.q),4)
         U=np.round(control.u_sig,4)
         #print("U1:",control.u[0],"\n")

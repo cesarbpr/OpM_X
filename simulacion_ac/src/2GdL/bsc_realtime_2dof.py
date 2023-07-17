@@ -100,7 +100,7 @@ class controler:
         self.pub_u=rospy.Publisher(pub_topic_u,Float64MultiArray,queue_size=10)
         self.qd_suscriber=rospy.Subscriber(sub_topic_q_des,Float64MultiArray,self.cb_qdes_in)
         self.qreal_suscriber=rospy.Subscriber(sub_topic_q_real,Float64MultiArray,self.cb_qreal_in)
-    """
+    
     # Con el robot real
     def cb_qreal_in(self,q_real):
         q_des1=q_real.data[2]
@@ -114,22 +114,7 @@ class controler:
         pub_array.data[2] = self.u[0,0]
         pub_array.data[3] = self.u[1,0]
         self.pub_u.publish(pub_array)
-    """  
-
-    # Para la simulación
-    def cb_qreal_in(self,q_real):
-        q1=q_real.data[0]
-        q2=q_real.data[1]
-        self.q = np.array([[q1], [q2]])
-
-    def publish_present_u(self):
-        pub_array = Float64MultiArray()
-        pub_array.data = [0,0]
-        pub_array.data[0] = self.u[0,0]
-        pub_array.data[1] = self.u[1,0]
-        self.pub_u.publish(pub_array)
-
-    
+   
 
     def cb_qdes_in(self,q_des):
         q_des1=q_des.data[0]

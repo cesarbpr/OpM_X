@@ -19,7 +19,7 @@ if __name__ == "__main__":
     qd2=np.deg2rad(0)
     qd3=np.deg2rad(0)
     qd4=np.deg2rad(0)
-    q_des = np.array([qd1,qd2,qd3,qd4])
+    q_des = np.array([qd1,qd2,qd3,qd4,0])
 
     while not rospy.is_shutdown():
         var= Float64MultiArray()
@@ -35,20 +35,20 @@ if __name__ == "__main__":
             qd3 = np.deg2rad(0)
             qd4 = np.deg2rad(0)
         elif k >= nn/4 and k <= nn/2:
-            qd1 = np.deg2rad(30)
-            qd2 = np.deg2rad(-30)
-            qd3 = np.deg2rad(50)
-            qd4 = np.deg2rad(-50)
+            qd1 = np.deg2rad(0)
+            qd2 = np.deg2rad(25)
+            qd3 = np.deg2rad(-25)
+            qd4 = np.deg2rad(0)
         elif k >= nn/2 and k <= 3*nn/4:
-            qd1 = np.deg2rad(-20)
-            qd2 = np.deg2rad(30)
-            qd3 = np.deg2rad(-30)
-            qd4 = np.deg2rad(40)
+            qd1 = np.deg2rad(00)
+            qd2 = np.deg2rad(0)
+            qd3 = np.deg2rad(0)
+            qd4 = np.deg2rad(0)
         elif k >= 3*nn/4 and k <= nn:
             qd1 = np.deg2rad(0)
-            qd2 = np.deg2rad(-20)
-            qd3 = np.deg2rad(0)
-            qd4 = np.deg2rad(-70)
+            qd2 = np.deg2rad(25)
+            qd3 = np.deg2rad(-25)
+            qd4 = np.deg2rad(0)
         else:
             qd1 = np.deg2rad(0)
             qd2 = np.deg2rad(0)
@@ -58,7 +58,10 @@ if __name__ == "__main__":
         
         #qd1  = 0
         #qd2  = 0
-        q_des = np.array([qd1,qd2,qd3,qd4])
+        #qd3  = 0
+        #qd4  = 0
+        
+        q_des = np.array([qd1,qd2,qd3,qd4,0])
         k = k + 1
         #rospy.loginfo(str(k))
         rate.sleep()

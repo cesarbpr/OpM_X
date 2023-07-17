@@ -107,7 +107,7 @@ s =  np.array([[0], [0],[0], [0]], dtype=np.float64)
 dqtilde =  np.array([[0], [0],[0], [0]], dtype=np.float64)
 
 # TIEMPO DE MUESTREO
-T = 0.02
+T = 0.01
 
 # VALORES PARA GENERACION DE TRAYECTORIAS
 Tp = 5

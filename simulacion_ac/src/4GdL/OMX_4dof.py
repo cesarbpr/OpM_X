@@ -47,7 +47,7 @@ class robot:
     # Bm=0.0001 Bg=0.01 
     # Beq=(n**2)*Bm+Bg
     Jeq=0.0037
-    Beq=0.0012
+    Beq=0.012
     # DATOS DEL SUB-SISTEMA ELECTRICO
     #   Km=0.0458 Kb=0.0458 KA=8.5 Ra=2.49Ka=8.5
     Km=0.005
